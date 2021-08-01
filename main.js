@@ -4,6 +4,15 @@ import bee01Url from './images/bee01.png';
 import bee02Url from './images/bee02.png';
 import bee03Url from './images/bee03.png';
 
+let lastRender = 0
+let assets;
+let context;
+let animationCounter = 0;
+
+let state = {
+  beeAnimationFrame: 1
+}
+
 function loadAssets() {
   const images = [
     { name: 'bee01', url: bee01Url },
@@ -22,9 +31,38 @@ function loadImage(name, url) {
   });
 }
 
+function update(progress) {
+  animationCounter += progress;
+
+  if (animationCounter > 200) {
+    animationCounter = 0;
+    state.beeAnimationFrame = (state.beeAnimationFrame + 1) % 3 + 1
+  }
+}
+
+function draw() {
+  context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+
+  const bee01 = assets.find(asset => asset.name === `bee0${state.beeAnimationFrame}`)
+
+
+  context.drawImage(bee01.asset, 100, 100, bee01.asset.width / 4, bee01.asset.height / 4);
+}
+
+function loop(timestamp) {
+  let progress = timestamp - lastRender
+
+  update(progress)
+  draw()
+
+  lastRender = timestamp
+  window.requestAnimationFrame(loop)
+}
+
+
 async function main() {
   const canvas = document.getElementById('app');
-  const context = canvas.getContext("2d");
+  context = canvas.getContext("2d");
 
   context.canvas.width  = window.innerWidth;
   context.canvas.height = window.innerHeight;
@@ -33,11 +71,11 @@ async function main() {
   canvas.style.backgroundRepeat = 'no-repeat';
   canvas.style.backgroundSize = 'cover'
 
-  const assets = await loadAssets();
+  assets = await loadAssets();
 
-  const bee01 = assets.find(asset => asset.name === 'bee01')
+  
 
-  context.drawImage(bee01.asset, 100, 100, bee01.asset.width / 4, bee01.asset.height / 4);
+  window.requestAnimationFrame(loop)
 }
 
 main();
